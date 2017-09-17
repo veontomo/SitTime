@@ -1,3 +1,9 @@
+// push button: https://www.arduino.cc/en/Tutorial/Button
+// lcd: https://www.arduino.cc/en/Tutorial/HelloWorld
+// autoscroll for lcd: https://www.arduino.cc/en/Tutorial/LiquidCrystalAutoscroll
+// distance measurement: https://create.arduino.cc/projecthub/silicon-ripley-10/distance-measurement-using-ultrasonic-sensor-and-arduino-9bacd4
+
+
 /*
   LiquidCrystal Library - Hello World
 
