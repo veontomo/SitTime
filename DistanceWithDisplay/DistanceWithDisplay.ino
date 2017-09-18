@@ -52,12 +52,20 @@
 const int trigPin = 9;
 const int echoPin = 10;
 const int buttonPin = 6;
-const float beta = 0.9;
+const float beta = 0.95;
+const float margin = 1 + 0.05;
 long duration;
 float distance;
 int buttonState = 0;
 
 float distPush = 0.0;
+float distUp = 0.0;
+
+long timeUp = 0;
+long timeDown = 0;
+long lastTime = 0;
+long currentTime = 0;
+
 
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
@@ -67,9 +75,7 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
-  // Print a message to the LCD.
-  lcd.print("Distance:");
-
+  
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
   pinMode(buttonPin, INPUT);
@@ -77,11 +83,9 @@ void setup() {
 }
 
 void loop() {
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
   lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  lcd.print(millis() / 1000);
+  currentTime = millis();
+  lcd.print(currentTime / 1000);
 
    // put your main code here, to run repeatedly:
   digitalWrite(trigPin, LOW);
@@ -98,21 +102,38 @@ void loop() {
   if (buttonState == HIGH) {
       lcd.setCursor(10, 0);
       lcd.print("     ");
-      if (distPush < 0.001) {
-        distPush = distance;
-      } else {
-        distPush = distPush*beta + distance*(1-beta);
-      }
+      // distPush = distPush*beta + distance*(1-beta);
+      distPush = cumulativeDistance(distPush, distance, beta);
       lcd.setCursor(10, 0);
       lcd.print(distPush);
-  } else {
-      lcd.setCursor(10, 1);
-      lcd.print("      ");
-      lcd.setCursor(10, 1);
-      lcd.print(distance);
   }
-  delay(100);
+  distUp =  cumulativeDistance(distUp, distance, beta); 
+  lcd.setCursor(10, 1);
+  lcd.print("      ");
+  lcd.setCursor(10, 1);
+  lcd.print(distUp);
+
+  lcd.setCursor(15, 0);
+
+  if (distUp > distPush*margin){
+    lcd.print("u");
+    timeUp += currentTime - lastTime;
+  } else {
+    lcd.print("d");
+    timeDown += currentTime - lastTime;
+   }
+   lastTime = currentTime;
+
+  lcd.setCursor(0,0);
+  lcd.print(timeUp/1000);
+  lcd.print(":");
+  lcd.print(timeDown/1000);
+  delay(300);
   
+}
+
+float cumulativeDistance(float newDist, float prevDist, float coef){
+  return  newDist*(1-coef) + prevDist*coef;
 }
 
 
