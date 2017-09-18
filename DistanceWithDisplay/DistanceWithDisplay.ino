@@ -52,9 +52,13 @@
 const int trigPin = 9;
 const int echoPin = 10;
 const int buttonPin = 6;
+const float beta = 0.9;
 long duration;
 float distance;
 int buttonState = 0;
+
+float distPush = 0.0;
+
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
 const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
@@ -73,16 +77,6 @@ void setup() {
 }
 
 void loop() {
-
-  buttonState = digitalRead(buttonPin);
-  lcd.setCursor(10, 1);
-
-  if (buttonState == HIGH) {
-    lcd.print("*");
-  } else {
-    lcd.print(" ");
-  }
-  
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
   lcd.setCursor(0, 1);
@@ -98,13 +92,27 @@ void loop() {
 
   duration = pulseIn(echoPin, HIGH);
   distance = duration*0.017;
-  lcd.setCursor(10, 0);
-  lcd.print("      ");
-  lcd.setCursor(10, 0);
-  lcd.print(distance);
-  Serial.println(distance);
-  delay(500);
-
+  
+  buttonState = digitalRead(buttonPin);
+  
+  if (buttonState == HIGH) {
+      lcd.setCursor(10, 0);
+      lcd.print("     ");
+      if (distPush < 0.001) {
+        distPush = distance;
+      } else {
+        distPush = distPush*beta + distance*(1-beta);
+      }
+      lcd.setCursor(10, 0);
+      lcd.print(distPush);
+  } else {
+      lcd.setCursor(10, 1);
+      lcd.print("      ");
+      lcd.setCursor(10, 1);
+      lcd.print(distance);
+  }
+  delay(100);
+  
 }
 
 
