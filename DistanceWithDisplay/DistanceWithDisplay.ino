@@ -106,24 +106,20 @@ void loop() {
   
   if (buttonState == HIGH) {
       distPush = cumulativeDistance(distPush, distance, beta);
-      printDistance(11, 0, distPush);
+      printDistance(11, 1, distPush);
   }
   distUp =  cumulativeDistance(distUp, distance, beta); 
-  printDistance(11, 1, distUp);
+  printDistance(11, 0, distUp);
   
   
 
   if (distUp > distPush*margin){
-    lcd.setCursor(6, 0);
-    lcd.print("|");
-    lcd.setCursor(6, 1);
-    lcd.print(" ");
+    printCharAt(6, 0, "*");
+    printCharAt(6, 1, " ");
     timeUp += currentTime - lastTime;
   } else {
-    lcd.setCursor(6, 0);
-    lcd.print(" ");
-    lcd.setCursor(6, 1);
-    lcd.print("|");
+    printCharAt(6, 0, " ");
+    printCharAt(6, 1, "*");
     timeDown += currentTime - lastTime;
    }
    lastTime = currentTime;
@@ -147,6 +143,11 @@ float cumulativeDistance(float newDist, float prevDist, float coef){
   return  newDist*(1-coef) + prevDist*coef;
 }
 
+void printCharAt(int col, int row, String symbol){
+    lcd.setCursor(col, row);
+    lcd.print(symbol);
+}
+
 void printDistance(int col, int row, float value){
   lcd.setCursor(col, row);
   lcd.print("      ");
@@ -154,6 +155,11 @@ void printDistance(int col, int row, float value){
   lcd.print(value);
 }
 
+// Print the percentage at given position.
+// Assume that the percentage is in the range [0, 100].
+// The percentage is given as an integer number to which the percentage sign ("%") is appended.
+// The overall length of the percentage string should not exceed 3 characters, therefore if the
+// value is 100, the percentage sign is omitted.
 void printPercent(int col, int row, int value){
   lcd.setCursor(col, row);
   if (value < 10) {
