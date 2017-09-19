@@ -61,6 +61,9 @@ int buttonState = 0;
 float distPush = 0.0;
 float distUp = 0.0;
 
+int percentUp = 0;
+int percentDown = 0;
+
 long timeUp = 0;
 long timeDown = 0;
 long lastTime = 0;
@@ -75,6 +78,10 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
+  lcd.setCursor(0, 0);
+  lcd.print("u");
+  lcd.setCursor(0, 1);
+  lcd.print("d");
   
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
@@ -83,9 +90,7 @@ void setup() {
 }
 
 void loop() {
-  lcd.setCursor(0, 1);
   currentTime = millis();
-  lcd.print(currentTime / 1000);
 
    // put your main code here, to run repeatedly:
   digitalWrite(trigPin, LOW);
@@ -100,40 +105,64 @@ void loop() {
   buttonState = digitalRead(buttonPin);
   
   if (buttonState == HIGH) {
-      lcd.setCursor(10, 0);
-      lcd.print("     ");
-      // distPush = distPush*beta + distance*(1-beta);
       distPush = cumulativeDistance(distPush, distance, beta);
-      lcd.setCursor(10, 0);
-      lcd.print(distPush);
+      printDistance(11, 0, distPush);
   }
   distUp =  cumulativeDistance(distUp, distance, beta); 
-  lcd.setCursor(10, 1);
-  lcd.print("      ");
-  lcd.setCursor(10, 1);
-  lcd.print(distUp);
-
-  lcd.setCursor(15, 0);
+  printDistance(11, 1, distUp);
+  
+  
 
   if (distUp > distPush*margin){
-    lcd.print("u");
+    lcd.setCursor(6, 0);
+    lcd.print("|");
+    lcd.setCursor(6, 1);
+    lcd.print(" ");
     timeUp += currentTime - lastTime;
   } else {
-    lcd.print("d");
+    lcd.setCursor(6, 0);
+    lcd.print(" ");
+    lcd.setCursor(6, 1);
+    lcd.print("|");
     timeDown += currentTime - lastTime;
    }
    lastTime = currentTime;
 
-  lcd.setCursor(0,0);
+  lcd.setCursor(1, 0);
   lcd.print(timeUp/1000);
-  lcd.print(":");
-  lcd.print(timeDown/1000);
-  delay(300);
   
+  lcd.setCursor(1, 1); 
+  lcd.print(timeDown/1000);
+
+  percentUp = 100 * timeUp / currentTime;
+  percentDown = 100 * timeDown / currentTime;
+  printPercent(7, 0, percentUp);
+  printPercent(7, 1, percentDown);
+
+  delay(300);
+ 
 }
 
 float cumulativeDistance(float newDist, float prevDist, float coef){
   return  newDist*(1-coef) + prevDist*coef;
+}
+
+void printDistance(int col, int row, float value){
+  lcd.setCursor(col, row);
+  lcd.print("      ");
+  lcd.setCursor(col, row);
+  lcd.print(value);
+}
+
+void printPercent(int col, int row, int value){
+  lcd.setCursor(col, row);
+  if (value < 10) {
+    lcd.print(" ");  
+  }
+  lcd.print(value);
+  if (value < 100){
+    lcd.print("%");
+  }
 }
 
 
