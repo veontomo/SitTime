@@ -116,22 +116,19 @@ void loop() {
   
 
   if (distUp > distPush*margin){
-    printCharAt(6, 0, "*");
-    printCharAt(6, 1, " ");
+    printCharAt(6, 0, '*');
+    printCharAt(6, 1, ' ');
     timeUp += currentTime - lastTime;
   } else {
-    printCharAt(6, 0, " ");
-    printCharAt(6, 1, "*");
+    printCharAt(6, 0, ' ');
+    printCharAt(6, 1, '*');
     timeDown += currentTime - lastTime;
    }
    lastTime = currentTime;
 
-  lcd.setCursor(1, 0);
-  lcd.print(timeUp/1000);
+  printTime(1, 0, timeUp/1000);
+  printTime(1, 1, timeDown/1000); 
   
-  lcd.setCursor(1, 1); 
-  lcd.print(timeDown/1000);
-
   percentUp = 100 * timeUp / currentTime;
   percentDown = 100 * timeDown / currentTime;
   printPercent(7, 0, percentUp);
@@ -145,24 +142,27 @@ float cumulativeDistance(float newDist, float prevDist, float coef){
   return  newDist*(1-coef) + prevDist*coef;
 }
 
-void printCharAt(int col, int row, String symbol){
+void printCharAt(int col, int row, char c){
     lcd.setCursor(col, row);
-    lcd.print(symbol);
+    lcd.print(c);
 }
 
 void printDistance(int col, int row, float value){
+  const String EMPTY_STRING = "     ";
   lcd.setCursor(col, row);
-  lcd.print("      ");
+  lcd.print(EMPTY_STRING);
   lcd.setCursor(col, row);
   
   if (value < 0){
     lcd.print("?");
   } else {
     if(value > MAX_DIST_SM){
-      } else {
-    lcd.print(value);}
+      lcd.print(".");
+    } else {
+      String d = String(value, DEC);
+      lcd.print(d.substring(0, EMPTY_STRING.length()));
+   }
   }
-  
 }
 
 // Print the percentage at given position.
@@ -186,4 +186,9 @@ void printPercent(int col, int row, unsigned int value){
   
 }
 
-
+/// Print a time at given position.
+/// The timestamp is given in seconds. 
+void printTime(int col, int row, unsigned long seconds){
+  lcd.setCursor(col, row);
+  lcd.print(seconds);
+}
