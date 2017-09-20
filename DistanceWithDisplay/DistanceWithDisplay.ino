@@ -46,8 +46,11 @@
 
 */
 
+
+
 // include the library code:
 #include <LiquidCrystal.h>
+#include <math.h>
 
 const int trigPin = 9;
 const int echoPin = 10;
@@ -69,7 +72,11 @@ unsigned long timeDown = 0;
 unsigned long lastTime = 0;
 unsigned long currentTime = 0;
 
-const float MAX_DIST_SM = 999.9;
+const float MAX_DIST_SM = 99.9;
+
+const int scales[6] = {60, 60, 24, 30, 365, 100};
+const char names[7] = {'s', 'm', 'h', 'd', 'M', 'y', 'c'};
+
 
 
 // initialize the library by associating any needed LCD interface pin
@@ -129,8 +136,8 @@ void loop() {
   printTime(1, 0, timeUp/1000);
   printTime(1, 1, timeDown/1000); 
   
-  percentUp = 100 * timeUp / currentTime;
-  percentDown = 100 * timeDown / currentTime;
+  percentUp = round(100.0 * timeUp / currentTime);
+  percentDown = round(100.0 * timeDown / currentTime);
   printPercent(7, 0, percentUp);
   printPercent(7, 1, percentDown);
 
@@ -159,7 +166,7 @@ void printDistance(int col, int row, float value){
     if(value > MAX_DIST_SM){
       lcd.print(".");
     } else {
-      String d = String(value, DEC);
+      String d = String(value, 1);
       lcd.print(d.substring(0, EMPTY_STRING.length()));
    }
   }
@@ -189,6 +196,21 @@ void printPercent(int col, int row, unsigned int value){
 /// Print a time at given position.
 /// The timestamp is given in seconds. 
 void printTime(int col, int row, unsigned long seconds){
+  const String EMPTY_STRING = "     ";
   lcd.setCursor(col, row);
-  lcd.print(seconds);
+  lcd.print(EMPTY_STRING);
+  lcd.setCursor(col, row);
+  lcd.print(secToString(seconds));
+}
+
+String secToString(const unsigned int sec){
+  int i = 0;
+  int rest = 0;
+  int value = sec;
+  while (value >= scales[i]){
+    rest = value % scales[i];
+    value = (value - rest) / scales[i];
+    i++;
+ }
+  return String(value, DEC).substring(0, 2) + names[i] + String(rest, DEC).substring(0, 2);
 }
