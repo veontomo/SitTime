@@ -54,20 +54,22 @@ const int echoPin = 10;
 const int buttonPin = 6;
 const float beta = 0.95;
 const float margin = 1 + 0.05;
-long duration;
+unsigned long duration;
 float distance;
 int buttonState = 0;
 
 float distPush = 0.0;
 float distUp = 0.0;
 
-int percentUp = 0;
-int percentDown = 0;
+unsigned int percentUp = 0;
+unsigned int percentDown = 0;
 
-long timeUp = 0;
-long timeDown = 0;
-long lastTime = 0;
-long currentTime = 0;
+unsigned long timeUp = 0;
+unsigned long timeDown = 0;
+unsigned long lastTime = 0;
+unsigned long currentTime = 0;
+
+const float MAX_DIST_SM = 999.9;
 
 
 // initialize the library by associating any needed LCD interface pin
@@ -152,7 +154,15 @@ void printDistance(int col, int row, float value){
   lcd.setCursor(col, row);
   lcd.print("      ");
   lcd.setCursor(col, row);
-  lcd.print(value);
+  
+  if (value < 0){
+    lcd.print("?");
+  } else {
+    if(value > MAX_DIST_SM){
+      } else {
+    lcd.print(value);}
+  }
+  
 }
 
 // Print the percentage at given position.
@@ -160,15 +170,20 @@ void printDistance(int col, int row, float value){
 // The percentage is given as an integer number to which the percentage sign ("%") is appended.
 // The overall length of the percentage string should not exceed 3 characters, therefore if the
 // value is 100, the percentage sign is omitted.
-void printPercent(int col, int row, int value){
+void printPercent(int col, int row, unsigned int value){
   lcd.setCursor(col, row);
+  String result;
   if (value < 10) {
-    lcd.print(" ");  
+    result = " ";  
+  } else {
+    result = "";
   }
-  lcd.print(value);
+  result += String(value, DEC);
   if (value < 100){
-    lcd.print("%");
+    result += "%";
   }
+  lcd.print(result);
+  
 }
 
 
