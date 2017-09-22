@@ -46,28 +46,37 @@
 
 */
 
+
+
 // include the library code:
 #include <LiquidCrystal.h>
+#include <math.h>
 
 const int trigPin = 9;
 const int echoPin = 10;
 const int buttonPin = 6;
 const float beta = 0.95;
 const float margin = 1 + 0.05;
-long duration;
+unsigned long duration;
 float distance;
 int buttonState = 0;
 
 float distPush = 0.0;
 float distUp = 0.0;
 
-int percentUp = 0;
-int percentDown = 0;
+unsigned int percentUp = 0;
+unsigned int percentDown = 0;
 
-long timeUp = 0;
-long timeDown = 0;
-long lastTime = 0;
-long currentTime = 0;
+unsigned long timeUp = 0;
+unsigned long timeDown = 0;
+unsigned long lastTime = 0;
+unsigned long currentTime = 0;
+
+const float MAX_DIST_SM = 99.9;
+
+const int scales[6] = {60, 60, 24, 30, 365, 100};
+const char names[7] = {'s', 'm', 'h', 'd', 'M', 'y', 'c'};
+
 
 
 // initialize the library by associating any needed LCD interface pin
@@ -113,24 +122,21 @@ void loop() {
   
 
   if (distUp > distPush*margin){
-    printCharAt(6, 0, "*");
-    printCharAt(6, 1, " ");
+    printCharAt(6, 0, '*');
+    printCharAt(6, 1, ' ');
     timeUp += currentTime - lastTime;
   } else {
-    printCharAt(6, 0, " ");
-    printCharAt(6, 1, "*");
+    printCharAt(6, 0, ' ');
+    printCharAt(6, 1, '*');
     timeDown += currentTime - lastTime;
    }
    lastTime = currentTime;
 
-  lcd.setCursor(1, 0);
-  lcd.print(timeUp/1000);
+  printTime(1, 0, timeUp/1000);
+  printTime(1, 1, timeDown/1000); 
   
-  lcd.setCursor(1, 1); 
-  lcd.print(timeDown/1000);
-
-  percentUp = 100 * timeUp / currentTime;
-  percentDown = 100 * timeDown / currentTime;
+  percentUp = round(100.0 * timeUp / currentTime);
+  percentDown = round(100.0 * timeDown / currentTime);
   printPercent(7, 0, percentUp);
   printPercent(7, 1, percentDown);
 
@@ -142,16 +148,27 @@ float cumulativeDistance(float newDist, float prevDist, float coef){
   return  newDist*(1-coef) + prevDist*coef;
 }
 
-void printCharAt(int col, int row, String symbol){
+void printCharAt(int col, int row, char c){
     lcd.setCursor(col, row);
-    lcd.print(symbol);
+    lcd.print(c);
 }
 
 void printDistance(int col, int row, float value){
+  const String EMPTY_STRING = "     ";
   lcd.setCursor(col, row);
-  lcd.print("      ");
+  lcd.print(EMPTY_STRING);
   lcd.setCursor(col, row);
-  lcd.print(value);
+  
+  if (value < 0){
+    lcd.print("?");
+  } else {
+    if(value > MAX_DIST_SM){
+      lcd.print(".");
+    } else {
+      String d = String(value, 1);
+      lcd.print(d.substring(0, EMPTY_STRING.length()));
+   }
+  }
 }
 
 // Print the percentage at given position.
@@ -159,15 +176,40 @@ void printDistance(int col, int row, float value){
 // The percentage is given as an integer number to which the percentage sign ("%") is appended.
 // The overall length of the percentage string should not exceed 3 characters, therefore if the
 // value is 100, the percentage sign is omitted.
-void printPercent(int col, int row, int value){
+void printPercent(int col, int row, unsigned int value){
   lcd.setCursor(col, row);
+  String result;
   if (value < 10) {
-    lcd.print(" ");  
+    result = " ";  
+  } else {
+    result = "";
   }
-  lcd.print(value);
+  result += String(value, DEC);
   if (value < 100){
-    lcd.print("%");
+    result += "%";
   }
+  lcd.print(result);
+  
 }
 
+/// Print a time at given position.
+/// The timestamp is given in seconds. 
+void printTime(int col, int row, unsigned long seconds){
+  const String EMPTY_STRING = "     ";
+  lcd.setCursor(col, row);
+  lcd.print(EMPTY_STRING);
+  lcd.setCursor(col, row);
+  lcd.print(secToString(seconds));
+}
 
+String secToString(const unsigned int sec){
+  int i = 0;
+  int rest = 0;
+  int value = sec;
+  while (value >= scales[i]){
+    rest = value % scales[i];
+    value = (value - rest) / scales[i];
+    i++;
+ }
+  return String(value, DEC).substring(0, 2) + names[i] + String(rest, DEC).substring(0, 2);
+}
